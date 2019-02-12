@@ -4,7 +4,7 @@ Hands-on materials for the Arctic Data Training Workshop
 
 * Data
 * Lessons
-* Notes
+* Notes and details: Christina Changed 
 
 Made some changes from R studio 
 
@@ -20,4 +20,4 @@ Hello.
 
 Another change.
 
-**A change made by Anastasia**
+**A change made by Anastasia** 
