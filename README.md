@@ -4,7 +4,7 @@ Hands-on materials for the Arctic Data Training Workshop
 
 * Data
 * Lessons
-* Notes and details: Christina Changed 
+* Notes and details: Alaska is my favourite state
 
 Made some changes from R studio 
 
