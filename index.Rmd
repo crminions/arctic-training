@@ -16,8 +16,9 @@ library(dplyr)
 library(tidyr) 
 library(ggplot2)
 library(RColorBrewer) 
-library(scales)
-
+library(scales) 
+library(leaflet)
+library(DT)
 ```
 
 ##Load in the Data File 
@@ -33,6 +34,8 @@ esc <- read.csv(url("https://knb.ecoinformatics.org/knb/d1/mn/v2/object/urn%3Auu
   * Calculate annual escapement by species and region 
   * Filter for Pacific Salmon (Sockeye, Chinook, Coho, Pink, Chum)  
 
+
+
 ###Methods  
   1. 'separate'
   2. 'group_by'
@@ -44,6 +47,10 @@ esc_dateChange <- esc %>%
   separate(sampleDate, into = c("year", "month", "day"), sep = "-", remove = F)
 
 ```
+
+<br/>
+<br/>
+<br/>
 
 ###Group the data and calculate the annual mean 
 ```{r}
@@ -87,6 +94,9 @@ my_theme <- theme_test() +
           plot.title = element_text(hjust = 0.5))
 ```
 
+<br/>
+<br/>
+<br/>
 
 ```{r, echo=FALSE}
 ggplot(filter(annual_esc, SASAP.Region == "Kodiak"), aes(x = year, y = Species_sum, color = Species)) +
@@ -149,6 +159,65 @@ ggsave("Figures/regional_escapement.png", plot = p,
        height = 8,
        units = "in")  #Can define the settings of the output 
 ```
+
+
+# Generate an interactive map 
+
+Map the sampling locations for escapement  
+
+  * Find distinct lat/lon/location combinations 
+
+```{r}
+locations <- esc %>% 
+  distinct(Location, Latitude, Longitude) %>% 
+  drop_na()
+
+head(locations)
+
+
+
+
+
+```
+
+<br/>
+<br/>
+<br/>
+
+
+```{r, echo=FALSE}
+#setting echo = false because we only want the table to show up and not the coding to create the table 
+#Create interactive datatables 
+datatable(locations)
+
+
+```
+
+This creates the map! 
+```{r}
+leaflet(locations) %>% 
+  addTiles() %>% 
+  addMarkers(lng = ~Longitude, lat = ~Latitude , popup = ~ Location)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
