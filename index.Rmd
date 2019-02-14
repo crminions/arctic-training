@@ -15,7 +15,8 @@ knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(tidyr) 
 library(ggplot2)
-library(RColorBrewer)
+library(RColorBrewer) 
+library(scales)
 
 ```
 
@@ -29,13 +30,13 @@ esc <- read.csv(url("https://knb.ecoinformatics.org/knb/d1/mn/v2/object/urn%3Auu
 
 ##Reformat the data for Plotting 
 
-    * Calculate annual escapement by species and region 
-    * Filter for Pacific Salmon (Sockeye, Chinook, Coho, Pink, Chum)  
+  * Calculate annual escapement by species and region 
+  * Filter for Pacific Salmon (Sockeye, Chinook, Coho, Pink, Chum)  
 
-  ###Methods! 
-    1. 'separate'
-    2. 'group_by'
-    3. 'summarize' using the 'sum' function 
+###Methods  
+  1. 'separate'
+  2. 'group_by'
+  3. 'summarize' using the 'sum' function 
 
 ```{r} 
 #Separate the Date column into year, month, day 
@@ -48,7 +49,7 @@ esc_dateChange <- esc %>%
 ```{r}
 Groupspecies_YearRegion <- esc_dateChange %>% 
   group_by(Species, SASAP.Region, year) %>% 
-   summarize(Species_mean = mean(DailyCount))
+   summarize(Species_sum = sum(DailyCount))
 
 ```
 
@@ -65,7 +66,7 @@ annual_esc <- Groupspecies_YearRegion %>%
 
 #General some static plots using ggplot2 
 ```{r}
-ggplot(annual_esc,aes(x = Species, y = Species_mean, fill = SASAP.Region)) +
+ggplot(annual_esc,aes(x = Species, y = Species_sum, fill = SASAP.Region)) +
   geom_col()
 
 #ggplot(annual_esc,aes(x = Species, y = Species_mean, fill = SASAP.Region)) +
@@ -79,14 +80,16 @@ ggplot(annual_esc,aes(x = Species, y = Species_mean, fill = SASAP.Region)) +
 ```
 
 
-```{r}
+```{r, echo=FALSE}
 my_theme <- theme_test() +
-    theme(legend.position = "bottom", legend.title = element_blank())
+    theme(legend.position = "bottom", 
+          legend.title = element_blank(),
+          plot.title = element_text(hjust = 0.5))
 ```
 
 
-```{r}
-ggplot(filter(annual_esc, SASAP.Region == "Kodiak"), aes(x = year, y = Species_mean, color = Species)) +
+```{r, echo=FALSE}
+ggplot(filter(annual_esc, SASAP.Region == "Kodiak"), aes(x = year, y = Species_sum, color = Species)) +
     geom_line() +
     geom_point() + 
     ylab("Escapement (Number of Fish)") +
@@ -101,17 +104,51 @@ ggplot(filter(annual_esc, SASAP.Region == "Kodiak"), aes(x = year, y = Species_m
   
   * You can save your theme settings to an object, then you can just add on the theme object that you created to the plot     coding (helps keep things in the code a bit more tidy! )
 
-```{r}
-ggplot(filter(annual_esc, SASAP.Region == "Kodiak"), aes(x = year, y = Species_mean, color = Species)) +
+```{r, echo=FALSE}
+ggplot(filter(annual_esc, SASAP.Region == "Kodiak"), aes(x = year, y = Species_sum, color = Species)) +
     geom_line() +
     geom_point() + 
+    scale_y_continuous(labels = comma) +       #This changes the format of the y-axis numbers 
     ylab("Escapement (Number of Fish)") +
     xlab("Year") +
     ggtitle("Kodiak Salmon Escapement") +
     my_theme         #Now using the theme object that I created 
 ```
 
+###We don't want to have the y-axis values in scientific notation! This can be changed. you can add commas or a percent sent ex: scale_y_continuous(labels = percent) 
 
+If I think that this is an awesome plot, and I want to create it for every region - this will let you do it:
+```{r, echo=FALSE}
+
+ggplot(annual_esc, aes(x = year, y = Species_sum, color = Species)) +
+    geom_line() +
+    geom_point() + 
+    scale_y_continuous(labels = comma) +  
+    facet_wrap(~SASAP.Region, scales = "free_y") +
+    my_theme
+  
+
+#You can play with the number of columns add: ncol = 2, to facet_wrap line. To the first line: 
+# {r, fig.width = 7, fig.height = 8} - this allows you to set the dimensions of the plot. 
+
+
+```
+
+###This next chunk of code using the ggsave command, will allow you to save the plot. 
+```{r, fig.width=7, fig.height=8, echo=FALSE}
+p <- ggplot(annual_esc, aes(x = year, y = Species_sum, color = Species)) +
+    geom_line() +
+    geom_point() + 
+    scale_y_continuous(labels = comma) +  
+    facet_wrap(~SASAP.Region, scales = "free_y", ncol = 2) +
+    my_theme
+p
+
+ggsave("Figures/regional_escapement.png", plot = p,
+       width = 7, 
+       height = 8,
+       units = "in")  #Can define the settings of the output 
+```
 
 
 
