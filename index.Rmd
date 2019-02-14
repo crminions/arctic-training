@@ -1,6 +1,6 @@
 ---
-title: "Index"
-author: "Christina"
+title: "Data Visualization"
+author: "Christina Minions"
 date: "2/14/2019"
 output: html_document
 ---
@@ -9,22 +9,111 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r}
+#Load Libraries
+library(dplyr)
+library(tidyr) 
+library(ggplot2)
+library(RColorBrewer)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+##Load in the Data File 
+    **Data citation**: Alaska Department of Fish and Game, Division of Commercial Fisheries. 2017. Daily salmon escapement counts from the OceanAK database, Alaska, 1921-2017. Knowledge Network for Biocomplexity. doi:10.5063/F1S46Q6M.
+    
+```{r}
+esc <- read.csv(url("https://knb.ecoinformatics.org/knb/d1/mn/v2/object/urn%3Auuid%3Af119a05b-bbe7-4aea-93c6-85434dcb1c5e", method = "libcurl"), stringsAsFactors = F)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+##Reformat the data for Plotting 
+
+    * Calculate annual escapement by species and region 
+    * Filter for Pacific Salmon (Sockeye, Chinook, Coho, Pink, Chum)  
+
+  ###Methods! 
+    1. 'separate'
+    2. 'group_by'
+    3. 'summarize' using the 'sum' function 
+
+```{r} 
+#Separate the Date column into year, month, day 
+esc_dateChange <- esc %>% 
+  separate(sampleDate, into = c("year", "month", "day"), sep = "-", remove = F)
+
+```
+
+###Group the data and calculate the annual mean 
+```{r}
+Groupspecies_YearRegion <- esc_dateChange %>% 
+  group_by(Species, SASAP.Region, year) %>% 
+   summarize(Species_mean = mean(DailyCount))
+
+```
+
+###Filter the data for select species 
+```{r}
+annual_esc <- Groupspecies_YearRegion %>%  
+  filter(Species %in% c("Chinook", "Sockeye", "Chum", "Coho", "Pink")) %>% 
+  mutate(year = as.numeric(year))
+  
+##If you need to mutate anything after grouping it needs to be done in a sperate line, or it needs to be added into the pipe before grouping happens 
+
+```
+
+
+#General some static plots using ggplot2 
+```{r}
+ggplot(annual_esc,aes(x = Species, y = Species_mean, fill = SASAP.Region)) +
+  geom_col()
+
+#ggplot(annual_esc,aes(x = Species, y = Species_mean, fill = SASAP.Region)) +
+  #scale_fill_brewer(palette = Paired)
+  #geom_col()
+
+
+##The aes code is way you use to define what data is going to be in the plot. You can either set the mapping with the ggplot function, or within whatever geom function you will be using. 
+
+##You can overlap data on the same graph by defining the mapping aes within different geom functions. For example could have a histogram with a line gragh over top 
+```
+
+
+```{r}
+my_theme <- theme_test() +
+    theme(legend.position = "bottom", legend.title = element_blank())
+```
+
+
+```{r}
+ggplot(filter(annual_esc, SASAP.Region == "Kodiak"), aes(x = year, y = Species_mean, color = Species)) +
+    geom_line() +
+    geom_point() + 
+    ylab("Escapement (Number of Fish)") +
+    xlab("Year") +
+    ggtitle("Kodiak Salmon Escapement") +
+    theme_test() +
+    theme(legend.position = "bottom", legend.title = element_blank())
+```
+
+###There are a bunch of standard themes already worked into ggplot. This will automatically set theme settings for you, so you don't have to manual choose every setting. 
+  You can still adjust the theme settings after selecting a pre-set theme  
+  
+  * You can save your theme settings to an object, then you can just add on the theme object that you created to the plot     coding (helps keep things in the code a bit more tidy! )
+
+```{r}
+ggplot(filter(annual_esc, SASAP.Region == "Kodiak"), aes(x = year, y = Species_mean, color = Species)) +
+    geom_line() +
+    geom_point() + 
+    ylab("Escapement (Number of Fish)") +
+    xlab("Year") +
+    ggtitle("Kodiak Salmon Escapement") +
+    my_theme         #Now using the theme object that I created 
+```
+
+
+
+
+
+
+
