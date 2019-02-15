@@ -219,7 +219,3 @@ leaflet(locations) %>%
 
 
 
-
-
-
-
