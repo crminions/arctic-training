@@ -39,4 +39,5 @@ rsconnect/
 #figure/     #this won't update and version anything in the figure folder 
 figures/*
 
-
+# shapefiles/
+shapefiles/*
